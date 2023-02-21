@@ -1,0 +1,70 @@
+import org.apache.log4j.{Level, Logger}
+import org.apache.spark.sql.SparkSession
+import org.apache.spark.SparkContext
+import org.apache.log4j.{Level, Logger}
+import org.apache.spark.sql.types.{IntegerType, StringType, StructField, StructType}
+
+
+object RDD_DF_DS extends App {
+  Logger.getLogger("org") setLevel (Level.ERROR)
+  val spark: SparkSession = SparkSession.builder()
+    .master("local[*]")
+    .appName("SparkByExamples")
+    .getOrCreate()
+
+  //create RDD from parallelize
+  val dataSeq = Seq(("Java", 20000), ("Python", 100000), ("Scala", 30000))
+  // val rdd= spark.sparkContext.parallelize(dataSeq)
+
+  //read text file using sparkContext.textFile(path)
+  val rdd2 = spark.sparkContext.textFile("C:\\Users\\sukan\\OneDrive\\Desktop\\spark\\scalaexercisedemo.txt")
+
+  //load csv file into RDD
+  val rddLoadCsv = spark.sparkContext.textFile("C:\\Users\\sukan\\OneDrive\\Desktop\\spark\\text01.txt")
+
+  //need every record in a csv to split by comma delimiter and store it in rdd as multiple columns
+  //we use map() method which return a new rdd instead of updating existing one.
+
+  //rdd actions
+  val rddl = spark.sparkContext.parallelize(List(("Sukanya", 1), ("ryan", 20), ("ikea", 50), ("larsh", 90)))
+  val rddi = spark.sparkContext.parallelize(List(1, 2, 3, 4, 6, 5, 9))
+  //aggregate
+
+  println("reduce: " + rddLoadCsv.reduce((x, y) => x + y))
+  println("reducebykey: " + rddLoadCsv.reduce((x, y) => x + y))
+
+  println("countByValue: " + rddl.countByValue())
+
+  //spark pairrdd functions
+  val rdd = spark.sparkContext.parallelize(List("Germany India USA",
+    "USA India Russia",
+    "India Brazil Canada China"))
+
+  val wordsRdd = rdd.flatMap(x => x.split(" ")).map(x => x.toUpperCase()).map(x => (x, 1)).reduceByKey((x, y) => x + y).sortByKey()
+
+  val wordsRdd1 = rdd.map(x => x.split(" "))
+  wordsRdd.collect.foreach(println)
+
+  //spark repartition() and coalesce()
+  val rddP = spark.sparkContext.parallelize((Range(0, 20)))
+  println(rddP.partitions.size)
+
+  val rddP1 = spark.sparkContext.textFile("C:\\Users\\sukan\\OneDrive\\Desktop\\spark\\test.txt")
+  println(rddP1.partitions.size)
+
+  val spark1: SparkSession = SparkSession.builder()
+    .master("local[5]")
+    .appName("SparkByExamples.com")
+    .getOrCreate()
+
+  val df = spark.range(0, 20)
+  println(df.rdd.partitions.length)
+
+
+  //RDD shuffle
+  val sc = spark.sparkContext
+  val rdd5 = sc.textFile("C:\\Users\\sukan\\OneDrive\\Desktop\\spark\\test.txt")
+  println(rdd5.getNumPartitions)
+
+  val rdd6= rdd5.flatMap(x=>x.split(" "))
+}
